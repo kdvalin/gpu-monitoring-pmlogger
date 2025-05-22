@@ -1,6 +1,7 @@
 #!/bin/sh
 interval="30s"
 show_metrics=0
+output_file="/root/metrics.archive"
 
 usage() {
     echo "$0 <options> [metric1 metric2 ...]" > /dev/stderr
@@ -11,6 +12,8 @@ usage() {
     echo -e "\t\t\ts (seconds, default if unit not specified)" > /dev/stderr
     echo -e "\t\t\tm (minutes)" > /dev/stderr
     echo -e "\t\t\th (hours)" > /dev/stderr
+    echo -e "\t-o/--output: Set the output filename" > /dev/stderr
+    echo -e "\t\tDefault is /root/metrics.archive" > /dev/stderr
     echo -e "\t-h/--help: Show this message and exit" > /dev/stderr
     echo -e "\t--show-metrics: Show all PCP metrics and exit" > /dev/stderr
 }
@@ -51,7 +54,7 @@ convert_interval() {
     echo "$amount $out_unit"
 }
 
-OPTS=$(getopt --options "i:h" --longoptions "interval:,help,show-metrics" -- $@)
+OPTS=$(getopt --options "i:ho:" --longoptions "interval:,output:,help,show-metrics" -- $@)
 eval set -- "$OPTS"
 while [[ -n "$@" ]]; do
     case $1 in
@@ -62,6 +65,10 @@ while [[ -n "$@" ]]; do
         -h | --help)
             usage $0
             exit 0
+        ;;
+        -o | --output)
+            output_file=$2
+            shift 2
         ;;
         --show-metrics)
             show_metrics=1
@@ -97,5 +104,5 @@ else
     cd /root
     
     echo "Starting pmlogger, CTL-C to kill"
-    pmlogger -c /pmlogger.conf /root/thing.archive
+    pmlogger -c /pmlogger.conf $output_file
 fi
