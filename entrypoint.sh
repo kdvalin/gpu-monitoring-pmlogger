@@ -7,6 +7,10 @@ usage() {
     echo -e "Options" > /dev/stderr
     echo -e "\t-i/--interval: The frequency at which pmlogger gathers data" > /dev/stderr
     echo -e "\t\tDefault: 30s" > /dev/stderr
+    echo -e "\t\tSupported units:"
+    echo -e "\t\t\ts (seconds, default if unit not specified)" > /dev/stderr
+    echo -e "\t\t\tm (minutes)" > /dev/stderr
+    echo -e "\t\t\th (hours)" > /dev/stderr
     echo -e "\t-h/--help: Show this message and exit" > /dev/stderr
     echo -e "\t--show-metrics: Show all PCP metrics and exit" > /dev/stderr
 }
@@ -15,6 +19,11 @@ convert_interval() {
     #Default is seconds
     unit=${1: -1}
     out_unit="seconds"
+    if echo "$unit" | grep -E '[0-9]' > /dev/null; then
+        echo "$1 seconds"
+        return
+    fi
+
     case $unit in
         s)
             out_unit="seconds"
@@ -25,9 +34,9 @@ convert_interval() {
         h)
             out_unit="hours"
         ;;
-        _)
-            echo "$1 seconds"
-            return
+        *)
+            echo "Unknown unit $unit" > /dev/stderr
+            exit 1
         ;;
     esac
 
@@ -71,6 +80,7 @@ if [[ "$show_metrics" -eq 1 ]]; then
     pminfo
 else
     if [ "$#" -ge 1 ]; then
+        convert_interval $interval > /dev/null
         echo "log mandatory on $(convert_interval $interval) {" > /pmlogger.conf
         for metric in "$@"; do
             echo -e "\t$metric" >> /pmlogger.conf
