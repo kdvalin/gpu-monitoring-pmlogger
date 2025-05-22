@@ -1,8 +1,10 @@
 #!/bin/sh
-cd /var/lib/pcp/pmdas/nvidia/
-./Install
-
 /usr/libexec/pcp/lib/pmcd start
 
+cd /var/lib/pcp/pmdas/nvidia/
+echo "daemon" | ./Install
+
 cd /root
-pmlogger thing.archive
+
+echo "Starting pmlogger, CTL-C to kill"
+pmlogger -c /pmlogger.conf /root/thing.archive
