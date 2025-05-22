@@ -15,6 +15,13 @@ usage() {
     echo -e "\t--show-metrics: Show all PCP metrics and exit" > /dev/stderr
 }
 
+setup_pcp() {
+    /usr/libexec/pcp/lib/pmcd start > /dev/null
+
+    cd /var/lib/pcp/pmdas/nvidia/
+    echo "daemon" | ./Install > /dev/null
+}
+
 convert_interval() {
     #Default is seconds
     unit=${1: -1}
@@ -71,12 +78,9 @@ while [[ -n "$@" ]]; do
     esac
 done
 
-/usr/libexec/pcp/lib/pmcd start > /dev/null
-
-cd /var/lib/pcp/pmdas/nvidia/
-echo "daemon" | ./Install > /dev/null
 
 if [[ "$show_metrics" -eq 1 ]]; then
+    setup_pcp
     pminfo
 else
     if [ "$#" -ge 1 ]; then
@@ -88,6 +92,8 @@ else
         echo "}" >> /pmlogger.conf
     fi
     
+    setup_pcp
+
     cd /root
     
     echo "Starting pmlogger, CTL-C to kill"
